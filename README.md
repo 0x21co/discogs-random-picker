@@ -1,71 +1,59 @@
-# Discogs Random Album Picker
+# Discogs Toolbox
 
-Tools to pick a random album from your Discogs collection.
+A modern Python-based toolbox to manage your Discogs collection via CLI and Web interface.
 
-## Python Script (Recommended)
+## Features
 
-The Python version (`random_picker.py`) supports advanced features like fuzzy matching and wildcard searches.
-
-### Prerequisites
-
-- **Python 3.x**
-- **requests** library: `pip3 install requests`
-
-### Usage
-
-1. **List entire collection:**
-   ```bash
-   python3 random_picker.py <username>
-   ```
-
-2. **Search and List matching albums (Default):**
-   Simply provide a search term after the username.
-   ```bash
-   python3 random_picker.py <username> "Miles"
-   ```
-
-3. **Pick a random album from the matches:**
-   Use the `--random` or `-r` flag.
-   ```bash
-   python3 random_picker.py <username> "Jazz" --random
-   ```
-
-4. **Advanced Search (with wildcards):**
-   Search for patterns in artist, title, label, year, or format.
-   ```bash
-   python3 random_picker.py <username> --search "*199*" --random
-   ```
-
-5. **Check for sold items in collection:**
-   Identify records you've sold on the marketplace but are still in your collection. **Requires a Discogs Token.**
-   ```bash
-   python3 random_picker.py <username> --check-sold
-   ```
-
-6. **Token and Refresh:**
-   Use `--token` or the `DISCOGS_TOKEN` env var for private collections. Use `--refresh` to bypass the local cache and fetch latest collection data.
+- **Advanced Search:** Search by artist, title, label, year, or format with wildcard support.
+- **Random Picker:** Pick a random album from your entire library or a filtered search result.
+- **Marketplace Sync:** Identify items you've sold on the marketplace that are still in your digital collection.
+- **Web GUI:** A responsive web interface for easy access on any device.
+- **Auto-Deployment:** One-script setup for Debian servers.
 
 ---
 
-## Bash Script (Simple)
+## Quick Start (Debian Server)
 
-A simple Bash script for macOS for quick random picks.
-
-### Prerequisites
-
-- **curl**, **jq**, **jot** (Standard on macOS, or `brew install jq`)
-
-### Usage
+If you are on a Debian system, you can set up the entire project (including the Web GUI) with one command:
 
 ```bash
-./random-album.sh <username> [token]
+chmod +x deploy.sh
+sudo ./deploy.sh
 ```
 
 ---
+
+## CLI Usage
+
+The CLI tool `random_picker.py` is the core of the toolbox.
+
+### Prerequisites
+- Python 3.x
+- `pip install -r requirements.txt`
+
+### Examples
+- **List matching albums:** `python3 random_picker.py <username> "Miles Davis"`
+- **Pick a random album:** `python3 random_picker.py <username> "Jazz" -r`
+- **Check for sold items:** `python3 random_picker.py <username> --check-sold` (Requires Token)
+- **Advanced search:** `python3 random_picker.py <username> -s "*199*" -r`
+
+---
+
+## Web Interface
+
+The project includes a Flask-based web interface. 
+- **Setup:** See [README_WEB.md](README_WEB.md) for detailed Gunicorn/Nginx instructions.
+- **Security:** Supports Basic Authentication and default user configuration via `.env`.
+
+---
+
+## Technical Details
+
+For developers and AI agents, see [AI_README.md](AI_README.md) for a deep dive into the architecture and extension points.
 
 ## How to get a Discogs Token
 
 1. Log in to your Discogs account.
 2. Go to **Settings > Developers**.
 3. Click **Generate new token**.
-4. Copy the token and use it with these scripts.
+4. Copy the token and set it in your `.env` file or `DISCOGS_TOKEN` environment variable.
