@@ -45,10 +45,20 @@ pip install -r requirements.txt
 if [ ! -f "$TOKEN_FILE" ]; then
     echo "⚠️  No .env file found. Please enter your Discogs Token:"
     read -r DISCOGS_TOKEN
+    echo "🔑 Please enter a Username for the Web-GUI (Default: admin):"
+    read -r WEB_USERNAME
+    WEB_USERNAME=${WEB_USERNAME:-admin}
+    echo "🔑 Please enter a Password for the Web-GUI:"
+    read -r WEB_PASSWORD
+    
     echo "DISCOGS_TOKEN=$DISCOGS_TOKEN" > "$TOKEN_FILE"
+    echo "WEB_USERNAME=$WEB_USERNAME" >> "$TOKEN_FILE"
+    echo "WEB_PASSWORD=$WEB_PASSWORD" >> "$TOKEN_FILE"
     echo "FLASK_SECRET_KEY=$(openssl rand -hex 16)" >> "$TOKEN_FILE"
 else
     DISCOGS_TOKEN=$(grep DISCOGS_TOKEN "$TOKEN_FILE" | cut -d'=' -f2)
+    WEB_USERNAME=$(grep WEB_USERNAME "$TOKEN_FILE" | cut -d'=' -f2 || echo "admin")
+    WEB_PASSWORD=$(grep WEB_PASSWORD "$TOKEN_FILE" | cut -d'=' -f2 || echo "")
 fi
 
 # 5. Systemd Service
@@ -65,6 +75,8 @@ Group=www-data
 WorkingDirectory=$PROJECT_DIR
 Environment="PATH=$VENV_DIR/bin"
 Environment="DISCOGS_TOKEN=$DISCOGS_TOKEN"
+Environment="WEB_USERNAME=$WEB_USERNAME"
+Environment="WEB_PASSWORD=$WEB_PASSWORD"
 ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind unix:app.sock --umask 000 run:app
 Restart=always
 UMask=000
