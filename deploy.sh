@@ -136,18 +136,23 @@ fi
 
 # 7. Permissions
 echo "🔐 Fixing permissions..."
-if [[ "$PROJECT_DIR" == /root/* ]]; then
-    chmod 755 /root
-fi
+case "$PROJECT_DIR" in
+    /root/*)
+        chmod 755 /root
+        ;;
+esac
 
 # Wait for socket to be created
 echo "⏳ Waiting for Gunicorn to create the socket..."
-for i in {1..10}; do
+MAX_RETRIES=10
+RETRY_COUNT=0
+while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if [ -S "$PROJECT_DIR/app.sock" ]; then
         chmod 666 "$PROJECT_DIR/app.sock"
         echo "✅ Socket permissions set."
         break
     fi
+    RETRY_COUNT=$((RETRY_COUNT + 1))
     sleep 1
 done
 
