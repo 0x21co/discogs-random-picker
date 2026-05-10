@@ -121,7 +121,21 @@ echo "🔐 Fixing permissions..."
 if [[ "$PROJECT_DIR" == /root/* ]]; then
     chmod 755 /root
 fi
-chmod 666 "$PROJECT_DIR/app.sock" || true
+
+# Wait for socket to be created
+echo "⏳ Waiting for Gunicorn to create the socket..."
+for i in {1..10}; do
+    if [ -S "$PROJECT_DIR/app.sock" ]; then
+        chmod 666 "$PROJECT_DIR/app.sock"
+        echo "✅ Socket permissions set."
+        break
+    fi
+    sleep 1
+done
+
+if [ ! -S "$PROJECT_DIR/app.sock" ]; then
+    echo "⚠️  Warning: Socket app.sock not found after 10 seconds. Check 'journalctl -u discogs_toolbox' if the app doesn't load."
+fi
 
 # 8. Firewall
 if command -v ufw > /dev/null; then
