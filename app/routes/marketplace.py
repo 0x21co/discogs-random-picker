@@ -6,7 +6,8 @@ bp = Blueprint('marketplace', __name__, url_prefix='/marketplace')
 
 @bp.route('/sold', methods=['GET', 'POST'])
 def sold():
-    username = request.form.get('username') or request.args.get('username')
+    default_user = os.environ.get('DEFAULT_DISCOGS_USERNAME')
+    username = request.form.get('username') or request.args.get('username') or default_user
     refresh = request.form.get('refresh') == 'on'
     
     overlaps = []

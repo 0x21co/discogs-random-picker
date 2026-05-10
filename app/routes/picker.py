@@ -7,7 +7,8 @@ bp = Blueprint('picker', __name__)
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
-    username = request.form.get('username') or request.args.get('username')
+    default_user = os.environ.get('DEFAULT_DISCOGS_USERNAME')
+    username = request.form.get('username') or request.args.get('username') or default_user
     query = request.form.get('query')
     is_random = request.form.get('random') == 'on'
     refresh = request.form.get('refresh') == 'on'
