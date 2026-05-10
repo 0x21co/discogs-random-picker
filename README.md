@@ -32,10 +32,11 @@ The CLI tool `random_picker.py` is the core of the toolbox.
 - `pip install -r requirements.txt`
 
 ### Examples
-- **List matching albums:** `python3 random_picker.py <username> "Miles Davis"`
-- **Pick a random album:** `python3 random_picker.py <username> "Jazz" -r`
-- **Check for sold items:** `python3 random_picker.py <username> --check-sold` (Requires Token)
-- **Advanced search:** `python3 random_picker.py <username> -s "*199*" -r`
+- **List matching albums:** `python3 random_picker.py "Miles Davis"` (uses default user from `.env`)
+- **Pick a random album:** `python3 random_picker.py "Jazz" -r`
+- **Check for sold items:** `python3 random_picker.py --check-sold`
+- **Override user:** `python3 random_picker.py other_user "Search Term"`
+- **Advanced search:** `python3 random_picker.py -s "*199*" -r`
 
 ---
 

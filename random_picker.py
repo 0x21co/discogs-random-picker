@@ -12,25 +12,54 @@ import os
 import sys
 import argparse
 import random
+from dotenv import load_dotenv
 from app.services.discogs_api import DiscogsService
+
+# Load environment variables from .env file
+load_dotenv()
 
 def main():
     parser = argparse.ArgumentParser(description="Discogs Library Search & Random Picker (CLI)")
-    parser.add_argument("username", help="Discogs username")
-    parser.add_argument("query", nargs="?", help="Search query (wildcard/substring)")
+    parser.add_argument("user_or_query", nargs="?", help="Discogs username or search query")
+    parser.add_argument("query_extra", nargs="?", help="Search query (if username was provided first)")
     parser.add_argument("--token", help="Discogs API token")
-    parser.add_argument("--search", "-s", help="Search query (alternative to positional query)")
+    parser.add_argument("--search", "-s", help="Search query (alternative)")
     parser.add_argument("--random", "-r", action="store_true", help="Pick a random album from the matches")
     parser.add_argument("--check-sold", action="store_true", help="Compare sold items (orders) with collection")
     parser.add_argument("--refresh", action="store_true", help="Force refresh of the collection cache")
 
     args = parser.parse_args()
 
+    # Logic to determine username and query from positional args and environment
+    env_user = os.environ.get("DEFAULT_DISCOGS_USERNAME")
+    
+    if args.user_or_query and args.query_extra:
+        # Both provided: python3 random_picker.py thejazzvinyl Miles
+        username = args.user_or_query
+        search_query = args.query_extra
+    elif args.user_or_query:
+        # One provided: python3 random_picker.py Miles (use env_user) 
+        # OR python3 random_picker.py thejazzvinyl (if env_user is empty)
+        if env_user:
+            username = env_user
+            search_query = args.user_or_query
+        else:
+            username = args.user_or_query
+            search_query = None
+    else:
+        # None provided: use env_user
+        username = env_user
+        search_query = None
+
+    if not username:
+        print("Error: No username provided and DEFAULT_DISCOGS_USERNAME not set in .env")
+        sys.exit(1)
+
     token = args.token or os.environ.get("DISCOGS_TOKEN")
-    service = DiscogsService(args.username, token)
+    service = DiscogsService(username, token)
     
     try:
-        print(f"Loading collection for {args.username}...")
+        print(f"Loading collection for {username}...")
         releases = service.fetch_collection(force_refresh=args.refresh)
     except Exception as e:
         print(f"Error fetching collection: {e}")
@@ -63,8 +92,9 @@ def main():
             sys.exit(1)
         return
 
-    search_query = args.query or args.search
-    filtered = service.search_library(releases, query=search_query)
+    # Final search query logic
+    final_query = search_query or args.search
+    filtered = service.search_library(releases, query=final_query)
 
     if not filtered:
         print("No albums found matching your criteria.")
