@@ -36,7 +36,13 @@ The Python version (`random_picker.py`) supports advanced features like fuzzy ma
    python3 random_picker.py <username> --search "*199*" --random
    ```
 
-5. **Token and Refresh:**
+5. **Check for sold items in collection:**
+   Identify records you've sold on the marketplace but are still in your collection. **Requires a Discogs Token.**
+   ```bash
+   python3 random_picker.py <username> --check-sold
+   ```
+
+6. **Token and Refresh:**
    Use `--token` or the `DISCOGS_TOKEN` env var for private collections. Use `--refresh` to bypass the local cache and fetch latest collection data.
 
 ---
