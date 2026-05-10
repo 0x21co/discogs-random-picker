@@ -1,43 +1,64 @@
 # Discogs Random Album Picker
 
-A simple Bash script for macOS to pick a random album from your Discogs collection.
+Tools to pick a random album from your Discogs collection.
 
-## Prerequisites
+## Python Script (Recommended)
 
-- **curl**: Used for API requests (installed by default on macOS).
-- **jq**: Used for parsing JSON data.
-  - Install via Homebrew: `brew install jq`
-- **jot**: Used for random number generation (installed by default on macOS).
+The Python version (`random_picker.py`) supports advanced features like fuzzy matching and wildcard searches.
 
-## Usage
+### Prerequisites
 
-1. **Basic usage (for public collections):**
+- **Python 3.x**
+- **requests** library: `pip3 install requests`
+
+### Usage
+
+1. **Basic usage:**
    ```bash
-   ./random-album.sh <your_discogs_username>
+   python3 random_picker.py <username>
    ```
 
-2. **With a Personal Access Token (recommended for private collections or higher rate limits):**
-   You can pass the token as a second argument:
+2. **Filter by label (with fuzzy matching):**
+   Handles typos automatically (e.g., "bluenote" -> "Blue Note").
    ```bash
-   ./random-album.sh <username> <token>
+   python3 random_picker.py <username> --label "Blue Note"
    ```
-   Or set it as an environment variable:
+
+3. **Wildcard search:**
+   Search for patterns in artist or title.
    ```bash
-   export DISCOGS_TOKEN="your_token_here"
-   ./random-album.sh <username>
+   python3 random_picker.py <username> --wildcard "*Jazz*"
    ```
+
+4. **Combine filters:**
+   ```bash
+   python3 random_picker.py <username> --label "Columbia" --wildcard "*Miles*"
+   ```
+
+5. **Token and Refresh:**
+   Use `--token` or the `DISCOGS_TOKEN` env var for private collections. Use `--refresh` to bypass the local cache and fetch latest collection data.
+
+---
+
+## Bash Script (Simple)
+
+A simple Bash script for macOS for quick random picks.
+
+### Prerequisites
+
+- **curl**, **jq**, **jot** (Standard on macOS, or `brew install jq`)
+
+### Usage
+
+```bash
+./random-album.sh <username> [token]
+```
+
+---
 
 ## How to get a Discogs Token
 
 1. Log in to your Discogs account.
 2. Go to **Settings > Developers**.
 3. Click **Generate new token**.
-4. Copy the token and use it with this script.
-
-## Customization
-
-The script is a single file (`random-album.sh`). You can move it to your `/usr/local/bin` or add an alias in your `.zshrc` or `.bash_profile` to run it from anywhere:
-
-```bash
-alias random-album='/path/to/random-album.sh <your_username>'
-```
+4. Copy the token and use it with these scripts.
