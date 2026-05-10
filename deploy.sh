@@ -65,8 +65,9 @@ Group=www-data
 WorkingDirectory=$PROJECT_DIR
 Environment="PATH=$VENV_DIR/bin"
 Environment="DISCOGS_TOKEN=$DISCOGS_TOKEN"
-ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind unix:app.sock -m 007 run:app
+ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind unix:app.sock --umask 000 run:app
 Restart=always
+UMask=000
 
 [Install]
 WantedBy=multi-user.target
