@@ -1,3 +1,4 @@
+import os
 import random
 from flask import Blueprint, render_template, request, flash, current_app
 from app.services.discogs_api import DiscogsService
@@ -15,7 +16,8 @@ def index():
     selected = None
     
     if username:
-        service = DiscogsService(username, current_app.config.get('DISCOGS_TOKEN'))
+        token = current_app.config.get('DISCOGS_TOKEN') or os.environ.get('DISCOGS_TOKEN')
+        service = DiscogsService(username, token)
         try:
             releases = service.fetch_collection(force_refresh=refresh)
             filtered = service.search_library(releases, query=query)
