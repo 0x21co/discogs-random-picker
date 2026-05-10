@@ -5,7 +5,7 @@
 
 set -e
 
-echo "🚀 Starting automated deployment..."
+echo "[START] Starting automated deployment..."
 
 # 1. Configuration
 PROJECT_DIR=$(pwd)
@@ -25,15 +25,15 @@ else
     CUSTOM_NGINX=false
 fi
 
-echo "📍 Project Directory: $PROJECT_DIR"
-echo "📍 Nginx detected at: $NGINX_BIN"
+echo "[INFO] Project Directory: $PROJECT_DIR"
+echo "[INFO] Nginx detected at: $NGINX_BIN"
 
 # 2. Prerequisites
-echo "📦 Installing prerequisites..."
+echo "[SETUP] Installing prerequisites..."
 apt update && apt install -y python3-pip python3-venv curl
 
 # 3. Virtual Environment & Dependencies
-echo "🐍 Setting up Python environment..."
+echo "[PYTHON] Setting up Python environment..."
 if [ ! -d "$VENV_DIR" ]; then
     python3 -m venv "$VENV_DIR"
 fi
@@ -43,14 +43,14 @@ pip install -r requirements.txt
 
 # 4. Environment Variables
 if [ ! -f "$TOKEN_FILE" ]; then
-    echo "⚠️  No .env file found. Please enter your Discogs Token:"
+    echo "[AUTH] No .env file found. Please enter your Discogs Token:"
     read -r DISCOGS_TOKEN
-    echo "👤 Please enter your default Discogs Username:"
+    echo "[AUTH] Please enter your default Discogs Username:"
     read -r DEFAULT_DISCOGS_USERNAME
-    echo "🔑 Please enter a Username for the Web-GUI (Default: admin):"
+    echo "[AUTH] Please enter a Username for the Web-GUI (Default: admin):"
     read -r WEB_USERNAME
     WEB_USERNAME=${WEB_USERNAME:-admin}
-    echo "🔑 Please enter a Password for the Web-GUI:"
+    echo "[AUTH] Please enter a Password for the Web-GUI:"
     read -r WEB_PASSWORD
     
     echo "DISCOGS_TOKEN=$DISCOGS_TOKEN" > "$TOKEN_FILE"
@@ -66,7 +66,7 @@ else
 fi
 
 # 5. Systemd Service
-echo "⚙️  Configuring Systemd service..."
+echo "[SYSTEMD] Configuring Systemd service..."
 SERVICE_FILE="/etc/systemd/system/discogs_toolbox.service"
 cat <<EOF > "$SERVICE_FILE"
 [Unit]
@@ -95,7 +95,7 @@ systemctl enable discogs_toolbox
 systemctl restart discogs_toolbox
 
 # 6. Nginx Configuration
-echo "🌐 Configuring Nginx..."
+echo "[NGINX] Configuring Nginx..."
 if [ "$CUSTOM_NGINX" = true ]; then
     # Add server block to custom nginx.conf if not already present
     if ! grep -q "listen $PORT" "$NGINX_CONF"; then
@@ -135,7 +135,7 @@ EOF
 fi
 
 # 7. Permissions
-echo "🔐 Fixing permissions..."
+echo "[PERM] Fixing permissions..."
 case "$PROJECT_DIR" in
     /root/*)
         chmod 755 /root
@@ -143,13 +143,13 @@ case "$PROJECT_DIR" in
 esac
 
 # Wait for socket to be created
-echo "⏳ Waiting for Gunicorn to create the socket..."
+echo "[WAIT] Waiting for Gunicorn to create the socket..."
 MAX_RETRIES=10
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     if [ -S "$PROJECT_DIR/app.sock" ]; then
         chmod 666 "$PROJECT_DIR/app.sock"
-        echo "✅ Socket permissions set."
+        echo "[SUCCESS] Socket permissions set."
         break
     fi
     RETRY_COUNT=$((RETRY_COUNT + 1))
@@ -157,14 +157,14 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
 done
 
 if [ ! -S "$PROJECT_DIR/app.sock" ]; then
-    echo "⚠️  Warning: Socket app.sock not found after 10 seconds. Check 'journalctl -u discogs_toolbox' if the app doesn't load."
+    echo "[WARNING] Socket app.sock not found after 10 seconds. Check 'journalctl -u discogs_toolbox' if the app doesn't load."
 fi
 
 # 8. Firewall
 if command -v ufw > /dev/null; then
-    echo "🔥 Opening Firewall port $PORT..."
+    echo "[FIREWALL] Opening Firewall port $PORT..."
     ufw allow "$PORT/tcp"
 fi
 
-echo "✅ Deployment complete!"
-echo "🌍 Access your app at: http://$(curl -s ifconfig.me):$PORT"
+echo "[FINISH] Deployment complete!"
+echo "[URL] Access your app at: http://$(curl -s ifconfig.me):$PORT"

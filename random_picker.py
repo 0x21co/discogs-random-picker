@@ -43,14 +43,14 @@ def main():
             overlaps = service.get_sold_comparison(releases, sold_items)
             
             if not overlaps:
-                print("\n✅ No sold items found in your collection.")
+                print("\n[OK] No sold items found in your collection.")
             else:
-                print(f"\n⚠️ FOUND {len(overlaps)} RELEASES IN YOUR COLLECTION THAT YOU HAVE SOLD:")
+                print(f"\n[WARNING] FOUND {len(overlaps)} RELEASES IN YOUR COLLECTION THAT YOU HAVE SOLD:")
                 print("-" * 70)
                 for item in overlaps:
-                    status = "🔴 SHOULD BE REMOVED" if item["should_remove"] else "🟡 PARTIAL"
+                    status = "SHOULD BE REMOVED" if item["should_remove"] else "PARTIAL"
                     count_info = f"(Sold {item['sold_count']}, Collection has {item['collection_count']})"
-                    print(f"📍 {item['artist']} - {item['title']}")
+                    print(f"[*] {item['artist']} - {item['title']}")
                     print(f"   Status:     {status} {count_info}")
                     print(f"   Release ID: {item['release_id']}")
                     if item['collection_count'] > 1:
@@ -75,7 +75,7 @@ def main():
         selected = random.choice(filtered)
         info = selected["basic_information"]
         print("-" * 40)
-        print("🎵 YOUR RANDOM ALBUM:")
+        print("YOUR RANDOM ALBUM:")
         print(f"{info['artists'][0]['name']} - {info['title']} ({info.get('year', 'Unknown')}) [{info['labels'][0]['name']}]")
         print(f"   URL: https://www.discogs.com/release/{selected['id']}")
         print("-" * 40)
