@@ -1,3 +1,4 @@
+import os
 from flask import Blueprint, render_template, request, flash, current_app
 from app.services.discogs_api import DiscogsService
 
@@ -11,7 +12,7 @@ def sold():
     overlaps = []
     
     if username:
-        token = current_app.config.get('DISCOGS_TOKEN')
+        token = current_app.config.get('DISCOGS_TOKEN') or os.environ.get('DISCOGS_TOKEN')
         if not token:
             flash("Ein Discogs API Token wird für diese Funktion benötigt (bitte in .env setzen).", "error")
         else:

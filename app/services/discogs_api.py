@@ -14,8 +14,14 @@ class DiscogsService:
         self.token = token
         self.base_url = f"https://api.discogs.com/users/{username}/collection/folders/0/releases"
         self.headers = {"User-Agent": USER_AGENT}
+        
+        # Diagnostic logging (masked)
         if token:
+            masked_token = f"{token[:4]}...{token[-4:]}" if len(token) > 8 else "****"
+            print(f"[DEBUG] DiscogsService initialized for {username} with token: {masked_token}")
             self.headers["Authorization"] = f"Discogs token={token}"
+        else:
+            print(f"[DEBUG] DiscogsService initialized for {username} WITHOUT token")
 
     def fetch_collection(self, force_refresh: bool = False) -> List[Dict]:
         if not force_refresh and os.path.exists(CACHE_FILE):
