@@ -13,26 +13,27 @@ The Python version (`random_picker.py`) supports advanced features like fuzzy ma
 
 ### Usage
 
-1. **Basic usage:**
+1. **List entire collection:**
    ```bash
    python3 random_picker.py <username>
    ```
 
-2. **Filter by label (with fuzzy matching):**
-   Handles typos automatically (e.g., "bluenote" -> "Blue Note").
+2. **Search and List matching albums (Default):**
+   Simply provide a search term after the username.
    ```bash
-   python3 random_picker.py <username> --label "Blue Note"
+   python3 random_picker.py <username> "Miles"
    ```
 
-3. **Wildcard search:**
-   Search for patterns in artist or title.
+3. **Pick a random album from the matches:**
+   Use the `--random` or `-r` flag.
    ```bash
-   python3 random_picker.py <username> --wildcard "*Jazz*"
+   python3 random_picker.py <username> "Jazz" --random
    ```
 
-4. **Combine filters:**
+4. **Advanced Search (with wildcards):**
+   Search for patterns in artist, title, label, year, or format.
    ```bash
-   python3 random_picker.py <username> --label "Columbia" --wildcard "*Miles*"
+   python3 random_picker.py <username> --search "*199*" --random
    ```
 
 5. **Token and Refresh:**

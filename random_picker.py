@@ -5,7 +5,17 @@ import random
 import argparse
 import requests
 import difflib
+import warnings
 from typing import List, Dict, Optional
+
+# Suppress urllib3 NotOpenSSLWarning
+warnings.filterwarnings("ignore", category=ImportWarning, module="urllib3")
+# Also handle specific urllib3/requests warnings if the above is not enough
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.NotOpenSSLWarning)
+except (ImportError, AttributeError):
+    pass
 
 CACHE_FILE = ".discogs_cache.json"
 USER_AGENT = "DiscogsRandomPicker/2.0"
@@ -48,46 +58,33 @@ class DiscogsPicker:
         
         return releases
 
-    def filter_releases(self, releases: List[Dict], label_query: Optional[str] = None, wildcard_query: Optional[str] = None) -> List[Dict]:
+    def search_library(self, releases: List[Dict], wildcard_query: Optional[str] = None) -> List[Dict]:
         filtered = releases
 
-        if label_query:
-            # Extract all unique labels
-            all_labels = set()
-            for r in releases:
-                for label in r["basic_information"]["labels"]:
-                    all_labels.add(label["name"])
-            
-            # Fuzzy match labels
-            matches = difflib.get_close_matches(label_query, list(all_labels), n=5, cutoff=0.5)
-            if not matches:
-                print(f"No labels found matching '{label_query}'.")
-                return []
-            
-            if matches[0].lower() != label_query.lower():
-                print(f"Matching labels found: {', '.join(matches)}")
-                print(f"Using: {matches[0]}")
-            
-            best_label = matches[0]
-            filtered = [
-                r for r in filtered 
-                if any(label["name"] == best_label for label in r["basic_information"]["labels"])
-            ]
-
         if wildcard_query:
-            q = wildcard_query.lower().replace("*", ".*")
-            import re
-            pattern = re.compile(q)
+            import fnmatch
+            q = wildcard_query.lower()
+            # If no wildcard characters, assume substring match
+            if "*" not in q and "?" not in q:
+                q = f"*{q}*"
             
-            filtered = [
-                r for r in filtered
-                if pattern.search(r["basic_information"]["title"].lower()) or
-                   any(pattern.search(artist["name"].lower()) for artist in r["basic_information"]["artists"])
-            ]
+            def item_matches(r):
+                info = r["basic_information"]
+                # Searchable fields: artist, title, labels, year, formats
+                search_texts = [
+                    info["title"].lower(),
+                    *[a["name"].lower() for a in info["artists"]],
+                    *[l["name"].lower() for l in info["labels"]],
+                    str(info.get("year", "")),
+                    *[f["name"].lower() for f in info.get("formats", [])]
+                ]
+                return any(fnmatch.fnmatch(text, q) for text in search_texts)
+            
+            filtered = [r for r in filtered if item_matches(r)]
 
         return filtered
 
-    def display_release(self, release: Dict):
+    def display_release(self, release: Dict, index: Optional[int] = None):
         info = release["basic_information"]
         artist = info["artists"][0]["name"]
         title = info["title"]
@@ -95,22 +92,18 @@ class DiscogsPicker:
         label = info["labels"][0]["name"]
         id = release["id"]
 
-        print("-" * 40)
-        print("🎵 YOUR RANDOM ALBUM:")
-        print("-" * 40)
-        print(f"Artist: {artist}")
-        print(f"Title:  {title}")
-        print(f"Year:   {year}")
-        print(f"Label:  {label}")
-        print(f"URL:    https://www.discogs.com/release/{id}")
-        print("-" * 40)
+        prefix = f"{index}. " if index is not None else ""
+        print(f"{prefix}{artist} - {title} ({year}) [{label}]")
+        if index is None: # Only show full details for single random pick
+            print(f"   URL: https://www.discogs.com/release/{id}")
 
 def main():
-    parser = argparse.ArgumentParser(description="Discogs Random Album Picker")
+    parser = argparse.ArgumentParser(description="Discogs Library Search & Random Picker")
     parser.add_argument("username", help="Discogs username")
-    parser.add_argument("--token", help="Discogs API token (optional, or use DISCOGS_TOKEN env var)")
-    parser.add_argument("--label", help="Filter by label (fuzzy matching)")
-    parser.add_argument("--wildcard", help="Wildcard search in artist or title")
+    parser.add_argument("query", nargs="?", help="Search query (wildcard/substring)")
+    parser.add_argument("--token", help="Discogs API token")
+    parser.add_argument("--search", "-s", help="Search query (alternative to positional query)")
+    parser.add_argument("--random", "-r", action="store_true", help="Pick a random album from the matches")
     parser.add_argument("--refresh", action="store_true", help="Force refresh of the collection cache")
 
     args = parser.parse_args()
@@ -125,15 +118,30 @@ def main():
         print(f"Error fetching collection: {e}")
         sys.exit(1)
 
-    filtered = picker.filter_releases(releases, label_query=args.label, wildcard_query=args.wildcard)
+    # Combine positional query and --search flag
+    search_query = args.query or args.search
+
+    filtered = picker.search_library(releases, wildcard_query=search_query)
 
     if not filtered:
         print("No albums found matching your criteria.")
         sys.exit(0)
 
-    print(f"Found {len(filtered)} matching albums.")
-    selected = random.choice(filtered)
-    picker.display_release(selected)
+    if args.random:
+        print(f"Found {len(filtered)} matching albums. Picking one randomly...")
+        selected = random.choice(filtered)
+        print("-" * 40)
+        print("🎵 YOUR RANDOM ALBUM:")
+        picker.display_release(selected)
+        print(f"   URL: https://www.discogs.com/release/{selected['id']}")
+        print("-" * 40)
+    else:
+        print(f"\nFound {len(filtered)} matching albums:")
+        print("-" * 40)
+        for i, r in enumerate(filtered, 1):
+            picker.display_release(r, index=i)
+        print("-" * 40)
+        print(f"Use '--random' or '-r' to pick one of these {len(filtered)} albums at random.")
 
 if __name__ == "__main__":
     main()
