@@ -82,7 +82,7 @@ Environment="DISCOGS_TOKEN=$DISCOGS_TOKEN"
 Environment="DEFAULT_DISCOGS_USERNAME=$DEFAULT_DISCOGS_USERNAME"
 Environment="WEB_USERNAME=$WEB_USERNAME"
 Environment="WEB_PASSWORD=$WEB_PASSWORD"
-ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --bind unix:app.sock --umask 000 run:app
+ExecStart=$VENV_DIR/bin/gunicorn --workers 3 --timeout 120 --bind unix:app.sock --umask 000 run:app
 Restart=always
 UMask=000
 
@@ -139,6 +139,7 @@ echo "[PERM] Fixing permissions..."
 case "$PROJECT_DIR" in
     /root/*)
         chmod 755 /root
+        chmod 755 "$PROJECT_DIR"
         ;;
 esac
 
