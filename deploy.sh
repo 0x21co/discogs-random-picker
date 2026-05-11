@@ -7,7 +7,7 @@ set -e
 
 echo "[START] Starting automated deployment..."
 
-# 1. Configuration
+# 1. Configuration - DYNAMIC PATH DETECTION
 PROJECT_DIR=$(pwd)
 VENV_DIR="$PROJECT_DIR/venv"
 PORT=5000
@@ -97,10 +97,15 @@ systemctl restart discogs_toolbox
 # 6. Nginx Configuration
 echo "[NGINX] Configuring Nginx..."
 if [ "$CUSTOM_NGINX" = true ]; then
-    # Add server block to custom nginx.conf if not already present
-    if ! grep -q "listen $PORT" "$NGINX_CONF"; then
-        # This is a basic injection before the last closing brace of the http block
-        sed -i '$ d' "$NGINX_CONF" # Remove last line (usually })
+    # In custom nginx.conf, we update the proxy_pass to the NEW path if it exists
+    # Or inject a new server block if none for this port exists.
+    if grep -q "listen $PORT" "$NGINX_CONF"; then
+        echo "[NGINX] Updating existing server block in $NGINX_CONF..."
+        # Use sed to replace the proxy_pass line specifically for the socket
+        sed -i "s|proxy_pass http://unix:.*app.sock;|proxy_pass http://unix:$PROJECT_DIR/app.sock;|g" "$NGINX_CONF"
+    else
+        echo "[NGINX] Injecting new server block into $NGINX_CONF..."
+        sed -i '$ d' "$NGINX_CONF"
         cat <<EOF >> "$NGINX_CONF"
     server {
         listen $PORT;
@@ -139,7 +144,14 @@ echo "[PERM] Fixing permissions..."
 case "$PROJECT_DIR" in
     /root/*)
         chmod 755 /root
-        chmod 755 "$PROJECT_DIR"
+        # Also ensure intermediate directories like /root/git are accessible
+        CURRENT_PART="/root"
+        IFS='/'
+        for PART in ${PROJECT_DIR#/root/}; do
+            CURRENT_PART="$CURRENT_PART/$PART"
+            chmod 755 "$CURRENT_PART"
+        done
+        unset IFS
         ;;
 esac
 
