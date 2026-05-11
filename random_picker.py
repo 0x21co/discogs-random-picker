@@ -12,11 +12,15 @@ import os
 import sys
 import argparse
 import random
-from dotenv import load_dotenv
-from app.services.discogs_api import DiscogsService
+try:
+    from dotenv import load_dotenv
+    # Load environment variables from .env file
+    load_dotenv()
+except ImportError:
+    # If dotenv is not installed, we continue without loading .env
+    pass
 
-# Load environment variables from .env file
-load_dotenv()
+from app.services.discogs_api import DiscogsService
 
 def main():
     parser = argparse.ArgumentParser(description="Discogs Library Search & Random Picker (CLI)")
