@@ -1,5 +1,4 @@
 import os
-from flask import Flask, request, Response
 from dotenv import load_dotenv
 from functools import wraps
 
@@ -10,9 +9,6 @@ def check_auth(username, password):
     expected_user = os.environ.get("WEB_USERNAME", "admin")
     expected_pass = os.environ.get("WEB_PASSWORD")
     
-    # If no password is set in environment, we might want to disable auth 
-    # or use a very secure default. For safety, if WEB_PASSWORD isn't set, 
-    # we'll allow all (or you can force a password here).
     if not expected_pass:
         return True
         
@@ -20,21 +16,14 @@ def check_auth(username, password):
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
+    from flask import Response
     return Response(
     'Bitte loggen Sie sich ein.\n'
     'Zugriff verweigert.', 401,
     {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
-def requires_auth(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        return f(*args, **kwargs)
-    return decorated
-
 def create_app(test_config=None):
+    from flask import Flask, request
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
