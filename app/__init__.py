@@ -1,8 +1,11 @@
 import os
-from dotenv import load_dotenv
 from functools import wraps
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 def check_auth(username, password):
     """Check if a username/password combination is valid."""
