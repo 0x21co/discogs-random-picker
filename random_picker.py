@@ -14,11 +14,16 @@ import argparse
 import random
 try:
     from dotenv import load_dotenv
-    # Load environment variables from .env file
     load_dotenv()
 except ImportError:
-    # If dotenv is not installed, we continue without loading .env
-    pass
+    # Manual fallback to read .env if dotenv library is missing
+    if os.path.exists(".env"):
+        with open(".env", "r") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key.strip()] = value.strip()
 
 from app.services.discogs_api import DiscogsService
 
